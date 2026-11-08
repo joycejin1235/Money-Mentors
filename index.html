@@ -1,0 +1,973 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f5f8ee">
+    <meta name="description" content="Classroom games from Money Mentors.">
+    <title>Money Mentors</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #20372d;
+        --muted: #718078;
+        --green: #28784e;
+        --green-dark: #1d603d;
+        --green-pale: #e8f4e8;
+        --yellow: #f5ce56;
+        --yellow-pale: #fff6d8;
+        --paper: #fffefa;
+        --canvas: #f5f8ee;
+        --line: #e6ebdf;
+        --shadow: 0 16px 42px rgb(44 71 48 / 7%);
+        font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+      }
+
+      * { box-sizing: border-box; }
+      html { font-size: 16px; }
+      body {
+        min-width: 320px;
+        min-height: 100vh;
+        margin: 0;
+        color: var(--ink);
+        background:
+          radial-gradient(ellipse at 92% 6%, rgb(245 206 86 / 15%), transparent 25rem),
+          var(--canvas);
+      }
+      button { font: inherit; color: inherit; }
+      button:focus-visible, a:focus-visible {
+        outline: 3px solid #d99035;
+        outline-offset: 3px;
+      }
+      .app-shell { display: grid; min-height: 100vh; grid-template-columns: 252px minmax(0, 1fr); }
+      .sidebar {
+        position: sticky;
+        top: 0;
+        display: flex;
+        height: 100vh;
+        flex-direction: column;
+        padding: 27px 19px 21px;
+        border-right: 1px solid var(--line);
+        background: #fffefa;
+      }
+      .brand { display: flex; align-items: center; gap: 11px; padding: 0 8px; color: var(--ink); text-decoration: none; }
+      .brand-mark { display: grid; width: 39px; height: 39px; place-items: center; border-radius: 12px; background: var(--yellow); color: var(--green-dark); font-size: .83rem; font-weight: 900; }
+      .brand-name { font-size: 1.12rem; font-weight: 900; letter-spacing: -.045em; }
+      .side-nav { display: grid; gap: 7px; margin-top: 34px; }
+      .nav-button {
+        display: flex;
+        min-height: 48px;
+        align-items: center;
+        padding: 0 13px;
+        border: 0;
+        border-radius: 13px;
+        background: transparent;
+        color: #64736a;
+        cursor: pointer;
+        font-size: .9rem;
+        font-weight: 800;
+        text-align: left;
+      }
+      .nav-button:hover { background: #f5f7f0; }
+      .nav-button[aria-current="page"] { background: var(--green-pale); color: var(--green-dark); }
+      .class-nav-group { position: relative; }
+      .class-nav-toggle { width: 100%; justify-content: space-between; gap: 8px; }
+      .class-nav-label { display: flex; min-width: 0; align-items: center; gap: 9px; }
+      .class-nav-icon { width: 23px; height: 23px; flex: 0 0 23px; }
+      .class-nav-chevron { transition: transform .15s ease; }
+      .class-nav-toggle[aria-expanded="true"] .class-nav-chevron { transform: rotate(90deg); }
+      .class-nav-children { display: grid; gap: 4px; margin: 3px 0 4px 17px; padding-left: 12px; border-left: 2px solid var(--line); }
+      .class-nav-children[hidden] { display: none; }
+      .class-week-link { min-height: 40px; padding: 7px 10px; border: 0; border-radius: 10px; background: transparent; color: #64736a; cursor: pointer; font-size: .82rem; font-weight: 750; text-align: left; }
+      .class-week-link:hover, .class-week-link[aria-current="page"] { background: var(--green-pale); color: var(--green-dark); }
+      .main-area { min-width: 0; padding: 30px clamp(20px, 4vw, 58px) 48px; }
+      .topbar { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+      .presentation-toggle {
+        min-height: 43px;
+        padding: 0 15px;
+        border: 1px solid var(--line);
+        border-radius: 11px;
+        background: var(--paper);
+        color: var(--green-dark);
+        cursor: pointer;
+        font-size: .9rem;
+        font-weight: 800;
+      }
+      .presentation-toggle:hover { border-color: #9cbe9d; background: var(--green-pale); }
+      .view[hidden], .game-view[hidden], .feedback[hidden] { display: none; }
+
+      .welcome-hero {
+        position: relative;
+        display: grid;
+        min-height: 285px;
+        grid-template-columns: minmax(0, 1fr) minmax(260px, .75fr);
+        align-items: center;
+        gap: 25px;
+        overflow: hidden;
+        padding: clamp(29px, 5vw, 54px);
+        border: 1px solid #e8eddb;
+        border-radius: 27px;
+        background: linear-gradient(115deg, #eff7e8 0%, #fffbea 100%);
+        box-shadow: var(--shadow);
+      }
+      .welcome-copy { position: relative; z-index: 1; max-width: 620px; }
+      h1 { margin: 0; font-size: clamp(2.4rem, 5vw, 4rem); font-weight: 900; letter-spacing: -.075em; line-height: 1.02; }
+      .welcome-copy > p { max-width: 540px; margin: 17px 0 0; color: var(--muted); font-size: 1rem; line-height: 1.7; }
+      .welcome-visual { position: relative; display: grid; min-height: 220px; place-items: center; }
+      .welcome-visual svg { width: min(100%, 360px); height: auto; }
+      .welcome-details { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+      .welcome-detail { display: flex; min-height: 86px; align-items: center; gap: 12px; padding: 14px; border: 1px solid var(--line); border-radius: 15px; background: var(--paper); color: #53655a; font-size: .82rem; line-height: 1.4; }
+      .welcome-detail strong { display: block; color: var(--ink); font-size: .87rem; }
+      .welcome-symbol { flex: 0 0 39px; width: 39px; height: 39px; }
+      .welcome-action { display: inline-flex; min-height: 48px; align-items: center; gap: 9px; margin-top: 22px; padding: 0 19px; border: 0; border-radius: 13px; background: var(--green); color: white; cursor: pointer; font-size: .88rem; font-weight: 900; }
+      .welcome-action:hover { background: var(--green-dark); transform: translateY(-1px); }
+
+      .page-heading { margin: 0 0 20px; }
+      .page-heading h1 { font-size: clamp(2rem, 4vw, 2.85rem); }
+      .simulation-browser { max-width: 760px; }
+      .simulation-browser h2 { margin: 0 0 15px; font-size: 1.35rem; letter-spacing: -.035em; }
+      .class-folder {
+        display: flex;
+        width: 100%;
+        min-height: 112px;
+        align-items: center;
+        gap: 18px;
+        padding: 20px 22px;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: var(--paper);
+        box-shadow: var(--shadow);
+        cursor: pointer;
+        text-align: left;
+        transition: border-color .15s ease, transform .15s ease;
+      }
+      .class-folder:hover { transform: translateY(-2px); border-color: #9cbe9d; }
+      .folder-mark { display: grid; width: 58px; height: 58px; flex: 0 0 58px; place-items: center; border-radius: 16px; background: var(--yellow-pale); }
+      .folder-mark svg { width: 34px; height: 34px; }
+      .folder-copy { flex: 1; }
+      .folder-copy strong { display: block; font-size: 1.1rem; }
+      .folder-copy span { display: block; margin-top: 5px; color: var(--muted); font-size: .9rem; }
+      .folder-chevron { color: var(--green-dark); font-size: 1.7rem; font-weight: 700; }
+      .simulation-collection[hidden], .simulation-browser[hidden] { display: none !important; }
+      .collection-header { display: flex; align-items: center; gap: 18px; margin-bottom: 20px; }
+      .back-to-folders { min-height: 42px; padding: 0 14px; border: 1px solid var(--line); border-radius: 11px; background: var(--paper); color: var(--green-dark); cursor: pointer; font-size: .9rem; font-weight: 800; white-space: nowrap; }
+      .back-to-folders:hover { border-color: #9cbe9d; background: var(--green-pale); }
+      .collection-title { flex: 1; }
+      .collection-title h2 { margin: 0; font-size: 1.55rem; letter-spacing: -.04em; }
+      .collection-title p { margin: 4px 0 0; color: var(--muted); font-size: .9rem; }
+      .collection-header .topbar { margin: 0; }
+      .game-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 15px; }
+      .game-tab {
+        display: flex;
+        min-height: 58px;
+        align-items: center;
+        gap: 0;
+        padding: 12px 15px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: var(--paper);
+        cursor: pointer;
+        text-align: left;
+      }
+      .game-tab:hover { border-color: #a9c7a6; }
+      .game-tab[aria-selected="true"] { border-color: #84b98c; background: #eff7eb; box-shadow: inset 0 0 0 1px #84b98c; }
+      .game-tab-title { display: block; font-size: .98rem; font-weight: 900; line-height: 1.3; }
+      .game-layout { display: block; }
+      .game-card { min-width: 0; padding: clamp(19px, 3vw, 30px); border: 1px solid var(--line); border-radius: 20px; background: var(--paper); box-shadow: var(--shadow); }
+      .game-card-heading h2 { margin: 0; font-size: 1.5rem; letter-spacing: -.04em; }
+      .progress-block { margin-top: 15px; }
+      .progress-label { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 7px; color: #53645a; font-size: .86rem; font-weight: 800; }
+      .progress-track { height: 7px; overflow: hidden; border-radius: 99px; background: #edf0e7; }
+      .progress-fill { width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #57a66d, #c8d96e); transition: width .25s ease; }
+      .scenario { margin-top: 16px; padding: 19px; border: 1px solid #edf0e5; border-radius: 17px; background: #fcfcf7; }
+      .scenario-kicker { margin: 0 0 7px; color: var(--green-dark); font-size: .9rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+      .scenario h3 { margin: 0; font-size: 1.5rem; letter-spacing: -.02em; }
+      .scenario-intro { margin: 8px 0 0; color: #34483c; font-size: 1.12rem; line-height: 1.6; }
+      .evidence-box { margin-top: 14px; padding: 16px; border-radius: 13px; background: white; }
+      .evidence-list { display: grid; gap: 7px; margin: 0; padding: 0; list-style: none; }
+      .evidence-list li { position: relative; padding-left: 19px; color: #34483c; font-size: 1.05rem; line-height: 1.6; }
+      .evidence-list li::before { position: absolute; top: 0; left: 0; content: "•"; color: var(--green); font-weight: 900; }
+      .ai-flag { display: grid; grid-template-columns: 90px 1fr; gap: 10px; align-items: baseline; margin-top: 13px; padding: 11px 13px; border-left: 3px solid var(--yellow); background: #fff9e8; }
+      .ai-flag strong { color: #604b16; font-size: .88rem; }
+      .ai-flag p { margin: 0; color: #554a2e; font-size: 1.05rem; line-height: 1.5; }
+      .decision-prompt { margin: 19px 0 10px; font-size: 1.18rem; font-weight: 900; }
+      .answer-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+      .answer-option {
+        display: flex;
+        min-height: 56px;
+        align-items: center;
+        padding: 10px 13px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: white;
+        cursor: pointer;
+        font-size: 1.08rem;
+        font-weight: 800;
+        justify-content: center;
+        text-align: center;
+        transition: border-color .15s ease, background .15s ease;
+      }
+      .answer-option:hover:not(:disabled) { border-color: #8db996; background: #f8fbf6; }
+      .answer-option:disabled { cursor: default; }
+      .answer-option.is-correct { border-color: #6db17c; background: #eaf5e9; }
+      .answer-option.is-incorrect { border-color: #e2a38a; background: #fff0e9; }
+      .feedback { margin-top: 13px; padding: 13px 14px; border-left: 3px solid #79ad7d; background: #f1f7ed; }
+      .feedback.incorrect { background: #fff3dc; }
+      .feedback strong { display: block; margin-bottom: 4px; font-size: .9rem; }
+      .feedback p { margin: 0; color: #56665a; font-size: .82rem; line-height: 1.55; }
+      .game-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 15px; }
+      .primary-button { min-height: 48px; padding: 0 18px; border: 0; border-radius: 12px; cursor: pointer; font-size: .95rem; font-weight: 900; }
+      .primary-button { background: var(--green); color: white; }
+      .primary-button:hover:not(:disabled) { background: var(--green-dark); transform: translateY(-1px); }
+      .primary-button:disabled { cursor: not-allowed; opacity: .48; }
+      .completion { padding: 28px 16px 18px; text-align: center; }
+      .completion h3 { margin: 0; font-size: 1.4rem; letter-spacing: -.05em; }
+      .completion p { max-width: 440px; margin: 9px auto 18px; color: var(--muted); font-size: .87rem; line-height: 1.65; }
+      .scenario-visual { display: grid; height: 170px; place-items: center; margin: 0 0 13px; overflow: hidden; border-radius: 12px; background: linear-gradient(120deg, #edf4e9, #fff5d8); }
+      .scenario-visual svg { width: 100%; height: 100%; }
+      .scenario-visual .visual-paper { fill: #fffefa; }
+      .scenario-visual .visual-green { fill: #83b17d; }
+      .scenario-visual .visual-yellow { fill: #f1cc59; }
+      .scenario-visual .visual-ink { fill: #52705a; }
+      .money-confetti {
+        position: fixed;
+        z-index: 20;
+        pointer-events: none;
+      }
+      .money-confetti-piece {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: var(--piece-width, 12px);
+        height: var(--piece-height, 12px);
+        border-radius: var(--piece-radius, 2px);
+        background: var(--piece-color);
+        animation: confetti-burst 1.7s cubic-bezier(.15,.7,.35,1) both;
+      }
+      .money-confetti-piece.is-strip { --piece-width: 9px; --piece-height: 21px; --piece-radius: 1px; }
+      .money-confetti-piece.is-dot { --piece-width: 13px; --piece-height: 13px; --piece-radius: 50%; }
+      @media (prefers-reduced-motion: reduce) {
+        .money-confetti-piece { animation: none; opacity: 1; transform: translate(var(--money-x), var(--money-y)) rotate(var(--money-rotation)); }
+      }
+      @keyframes confetti-burst {
+        0% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(.75); }
+        12% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1); }
+        100% { opacity: 0; transform: translate(var(--money-x), var(--money-y)) rotate(var(--money-rotation)) scale(.75); }
+      }
+      body.presentation-mode { overflow: hidden; }
+      body.presentation-mode .app-shell { display: block; min-height: 100vh; }
+      body.presentation-mode .sidebar { display: none; }
+      body.presentation-mode .main-area { height: 100vh; padding: 0; }
+      body.presentation-mode #welcome-view { display: none; }
+      body.presentation-mode #simulations-view { display: flex; height: 100vh; min-height: 0; flex-direction: column; padding: 12px 20px; }
+      body.presentation-mode #simulations-view[hidden] { display: none; }
+      body.presentation-mode .simulation-browser { display: none; }
+      body.presentation-mode .simulation-collection { display: flex; min-height: 0; height: 100%; flex-direction: column; }
+      body.presentation-mode .collection-header { flex: 0 0 auto; margin: 0 0 8px; }
+      body.presentation-mode .collection-title { display: none; }
+      body.presentation-mode .collection-header .topbar { margin-left: auto; }
+      body.presentation-mode .back-to-folders { display: none; }
+      body.presentation-mode .game-view[hidden] { display: none; }
+      body.presentation-mode .presentation-toggle { min-height: 42px; }
+      body.presentation-mode .page-heading { display: none; }
+      body.presentation-mode .game-tabs { display: none; }
+      body.presentation-mode .game-layout { min-height: 0; flex: 1 1 auto; }
+      body.presentation-mode .game-card { display: flex; height: 100%; min-height: 0; flex-direction: column; overflow: auto; padding: 22px clamp(22px, 5vw, 72px); }
+      body.presentation-mode .game-card-heading h2 { font-size: 1.6rem; }
+      body.presentation-mode .progress-block { margin-top: 10px; }
+      body.presentation-mode .progress-label { font-size: 1rem; }
+      body.presentation-mode .scenario { margin-top: 12px; padding: 20px clamp(18px, 4vw, 58px); }
+      body.presentation-mode .scenario-visual { height: clamp(140px, 23vh, 210px); margin-bottom: 12px; }
+      body.presentation-mode .scenario-kicker { margin-bottom: 6px; font-size: 1rem; }
+      body.presentation-mode .scenario h3 { font-size: clamp(1.6rem, 3vw, 2.4rem); }
+      body.presentation-mode .scenario-intro { margin-top: 6px; font-size: clamp(1.1rem, 2vw, 1.45rem); }
+      body.presentation-mode .evidence-box { margin-top: 12px; padding: 14px 18px; }
+      body.presentation-mode .evidence-list { gap: 7px; }
+      body.presentation-mode .evidence-list li { font-size: clamp(1rem, 1.5vw, 1.25rem); line-height: 1.45; }
+      body.presentation-mode .ai-flag { margin-top: 12px; padding: 12px 16px; }
+      body.presentation-mode .ai-flag p { font-size: clamp(1rem, 1.5vw, 1.25rem); }
+      body.presentation-mode .decision-prompt { margin: 16px 0 10px; font-size: clamp(1.2rem, 2vw, 1.6rem); }
+      body.presentation-mode .answer-option { min-height: 64px; padding: 14px 18px; font-size: clamp(1.05rem, 1.7vw, 1.35rem); }
+      body.presentation-mode .game-actions { margin-top: 12px; }
+      body.presentation-mode .primary-button { min-height: 52px; font-size: 1.05rem; }
+      body.presentation-mode .completion { padding: 22px; }
+
+      @media (max-width: 980px) {
+        .app-shell { grid-template-columns: 215px minmax(0, 1fr); }
+        .main-area { padding-inline: 25px; }
+      }
+      @media (max-width: 760px) {
+        .app-shell { display: block; }
+        .sidebar { position: static; width: 100%; height: auto; padding: 13px 18px 11px; border-right: 0; border-bottom: 1px solid var(--line); }
+        .sidebar { flex-direction: row; align-items: center; justify-content: space-between; gap: 15px; }
+        .side-nav { display: flex; gap: 5px; margin-top: 0; }
+        .nav-button { min-height: 42px; padding-inline: 10px; font-size: .78rem; }
+        .class-nav-group { flex: 1 1 auto; }
+        .class-nav-toggle { justify-content: center; }
+        .class-nav-children { position: absolute; z-index: 5; top: calc(100% + 5px); left: 0; min-width: 190px; margin: 0; padding: 8px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); box-shadow: var(--shadow); }
+        .main-area { padding-inline: 18px; }
+        .welcome-hero { grid-template-columns: 1fr 230px; min-height: 245px; padding: 25px; }
+        .answer-options { grid-template-columns: 1fr; }
+        .welcome-details { grid-template-columns: 1fr; gap: 8px; }
+        .welcome-detail { min-height: 66px; }
+        .collection-header { align-items: flex-start; flex-wrap: wrap; gap: 10px; }
+        .collection-title { flex-basis: calc(100% - 150px); }
+        .collection-title h2 { font-size: 1.3rem; }
+        body.presentation-mode #simulations-view { padding: 10px 14px; }
+        body.presentation-mode .game-card { padding: 14px; }
+        body.presentation-mode .scenario { padding: 14px; }
+      }
+      @media (max-width: 540px) {
+        .sidebar { align-items: flex-start; flex-direction: column; gap: 10px; padding: 11px 14px; }
+        .brand-mark { width: 37px; height: 37px; border-radius: 13px; }
+        .side-nav { width: 100%; }
+        .nav-button { flex: 1; justify-content: center; }
+        .class-nav-group { width: 100%; }
+        .class-nav-toggle { justify-content: space-between; }
+        .class-nav-children { position: static; min-width: 0; margin: 3px 0 4px 17px; padding: 0 0 0 12px; border: 0; border-left: 2px solid var(--line); border-radius: 0; background: transparent; box-shadow: none; }
+        .main-area { padding: 22px 13px 36px; }
+        .welcome-hero { grid-template-columns: 1fr; min-height: 0; padding: 24px; }
+        .welcome-copy > p { max-width: 420px; font-size: .9rem; }
+        .game-tabs { grid-template-columns: 1fr; gap: 7px; }
+        .game-tab { min-height: 48px; }
+        .game-card { padding: 17px; }
+        .scenario { padding: 15px; }
+        .scenario-visual { height: 140px; }
+        .ai-flag { grid-template-columns: 1fr; gap: 4px; }
+        body.presentation-mode #simulations-view { padding: 8px; }
+        body.presentation-mode .game-card { padding: 10px; }
+        body.presentation-mode .scenario { padding: 10px; }
+        body.presentation-mode .answer-options { grid-template-columns: 1fr; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Main sidebar">
+        <a class="brand" href="#" aria-label="Money Mentors home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 40 40" width="27" height="27" role="presentation">
+              <circle cx="20" cy="20" r="18" fill="#28784e"/>
+              <path d="M20 29V15m0 7c-7 0-10-4-10-9 7 0 10 3 10 9zm0-4c0-6 4-9 10-9 0 6-4 9-10 9z" fill="#f5ce56" stroke="#f5ce56" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/>
+            </svg>
+          </span>
+          <span class="brand-name">Money Mentors</span>
+        </a>
+        <nav class="side-nav" aria-label="Main navigation">
+          <button class="nav-button" type="button" data-view="welcome" aria-current="page">Welcome</button>
+          <button class="nav-button" type="button" data-view="simulations">Simulations</button>
+          <div class="class-nav-group">
+            <button class="nav-button class-nav-toggle" type="button" aria-expanded="false" aria-controls="class-nav-children">
+              <span class="class-nav-label">
+                <svg class="class-nav-icon" viewBox="0 0 32 32" aria-hidden="true">
+                  <rect x="5" y="8" width="22" height="19" rx="7" fill="#e8f4e8" stroke="#28784e" stroke-width="2"/>
+                  <path d="M16 4v4M3 16h2m22 0h2" stroke="#28784e" stroke-width="2" stroke-linecap="round"/>
+                  <circle cx="12" cy="16" r="2" fill="#28784e"/><circle cx="20" cy="16" r="2" fill="#28784e"/>
+                  <path d="M12 21q4 4 8 0" fill="none" stroke="#bf9b2e" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <span>AI in the Business World</span>
+              </span>
+              <span class="class-nav-chevron" aria-hidden="true">›</span>
+            </button>
+            <div class="class-nav-children" id="class-nav-children" hidden>
+              <button class="class-week-link" type="button" data-class="business-ai-week-3">Week 3</button>
+            </div>
+          </div>
+        </nav>
+      </aside>
+
+      <main class="main-area">
+        <section class="view" id="welcome-view" aria-labelledby="welcome-title">
+          <div class="welcome-hero">
+            <div class="welcome-copy">
+              <h1 id="welcome-title">Welcome</h1>
+              <p>We offer free week-long summer camps, online classes, and in-person sessions. Through welcoming, teen-led programs, we help kids ages 8–16 build practical money skills for everyday life. We make financial learning accessible and support young people and families in our community.</p>
+              <button class="welcome-action" type="button" data-open-simulations>View simulations</button>
+            </div>
+            <div class="welcome-visual" aria-hidden="true">
+              <svg viewBox="0 0 360 245" role="presentation">
+                <ellipse cx="183" cy="210" rx="139" ry="17" fill="#dfe9d6"/>
+                <path d="M75 199h215l-18-97H94z" fill="#28784e"/>
+                <path d="M93 112h180l-13 72H106z" fill="#fffefa"/>
+                <path d="M87 102h194v19H87z" fill="#f1cc59"/>
+                <path d="M119 102V70h130v32" fill="#80ae78"/>
+                <path d="M139 102V82h90v20" fill="#fffefa"/>
+                <circle cx="181" cy="54" r="29" fill="#f1cc59"/>
+                <path d="M146 58c0-23 15-39 35-39s35 16 35 39c-17-2-29-11-36-20-8 12-19 18-34 20" fill="#3e6650"/>
+                <path d="M164 55h1m31 0h1" stroke="#20372d" stroke-width="5" stroke-linecap="round"/>
+                <path d="M171 67q10 8 20 0" fill="none" stroke="#a86445" stroke-width="3" stroke-linecap="round"/>
+                <path d="m105 143 26 26m0-26-26 26" stroke="#e9eee5" stroke-width="8" stroke-linecap="round"/>
+                <circle cx="249" cy="153" r="20" fill="#f1cc59"/>
+                <text x="249" y="160" fill="#725d24" font-size="21" font-family="Trebuchet MS, sans-serif" font-weight="700" text-anchor="middle">$</text>
+                <circle cx="283" cy="68" r="17" fill="#fffefa"/>
+                <path d="m283 57 4 8 9 2-6 7 1 9-8-4-8 4 1-9-6-7 9-2z" fill="#f1cc59"/>
+              </svg>
+            </div>
+          </div>
+          <div class="welcome-details" aria-label="Camp details">
+            <div class="welcome-detail">
+              <svg class="welcome-symbol" viewBox="0 0 40 40" aria-hidden="true"><circle cx="14" cy="13" r="7" fill="#f1cc59"/><circle cx="28" cy="15" r="6" fill="#80ae78"/><path d="M3 34c1-8 5-12 11-12s10 4 11 12z" fill="#28784e"/><path d="M22 34c1-7 3-10 7-10s7 3 8 10z" fill="#b9cf91"/></svg>
+              <span><strong>Teen-led</strong>Made by teens for kids.</span>
+            </div>
+            <div class="welcome-detail">
+              <svg class="welcome-symbol" viewBox="0 0 40 40" aria-hidden="true"><rect x="4" y="8" width="32" height="28" rx="5" fill="#e8f4e8" stroke="#28784e" stroke-width="2"/><path d="M12 5v8m16-8v8M5 16h30" fill="none" stroke="#28784e" stroke-width="3" stroke-linecap="round"/><path d="m14 26 4 4 9-9" fill="none" stroke="#e3b83c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span><strong>Classes & camps</strong>Online, in person, and week-long summer camps.</span>
+            </div>
+            <div class="welcome-detail">
+              <svg class="welcome-symbol" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="16" fill="#fff3cd"/><path d="M20 9v22M9 15h22m-22 0 5 10h6l-5-10zm11 0 5 10h6l-5-10z" fill="none" stroke="#28784e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 31h10" stroke="#28784e" stroke-width="2.5" stroke-linecap="round"/></svg>
+              <span><strong>Free to attend</strong>Financial literacy for ages 8-16.</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="simulations-view" aria-labelledby="simulations-title" hidden>
+          <div class="page-heading">
+            <h1 id="simulations-title">Simulations</h1>
+          </div>
+          <div class="simulation-browser" id="simulation-browser">
+            <h2>Classes</h2>
+            <button class="class-folder" type="button" aria-expanded="false" aria-controls="week-three-games">
+              <span class="folder-mark" aria-hidden="true">
+                <svg viewBox="0 0 40 40" role="presentation"><rect x="7" y="11" width="26" height="23" rx="8" fill="#e8f4e8" stroke="#28784e" stroke-width="2"/><path d="M20 6v5M4 20h3m26 0h3" stroke="#28784e" stroke-width="2" stroke-linecap="round"/><circle cx="15" cy="20" r="2" fill="#28784e"/><circle cx="25" cy="20" r="2" fill="#28784e"/><path d="M14 26q6 5 12 0" fill="none" stroke="#bf9b2e" stroke-width="2" stroke-linecap="round"/></svg>
+              </span>
+              <span class="folder-copy"><strong>AI in the Business World</strong><span>Week 3 · 3 simulations</span></span>
+              <span class="folder-chevron" aria-hidden="true">›</span>
+            </button>
+          </div>
+          <div class="simulation-collection" id="week-three-games" hidden>
+            <div class="collection-header">
+              <button class="back-to-folders" type="button">‹ All classes</button>
+              <div class="collection-title"><h2>AI in the Business World</h2><p>Week 3</p></div>
+              <div class="topbar">
+                <button class="presentation-toggle" type="button" aria-pressed="false">Presentation mode</button>
+              </div>
+            </div>
+            <div class="game-tabs" role="tablist" aria-label="Choose a simulation">
+              <button class="game-tab" type="button" role="tab" data-game="hiring" aria-selected="true" aria-controls="hiring-game"><span class="game-tab-title">The Hiring Challenge</span></button>
+              <button class="game-tab" type="button" role="tab" data-game="real-fake" aria-selected="false" aria-controls="real-fake-game"><span class="game-tab-title">Real, Fake, or Uncertain?</span></button>
+              <button class="game-tab" type="button" role="tab" data-game="ethical" aria-selected="false" aria-controls="ethical-game"><span class="game-tab-title">AI: Ethical or Not?</span></button>
+            </div>
+            <div class="game-layout">
+              <section class="game-card game-view" id="hiring-game" role="tabpanel" aria-label="The Hiring Challenge">
+                <div class="game-card-heading"><h2>The Hiring Challenge</h2></div>
+                <div class="game-content" data-content="hiring"></div>
+              </section>
+              <section class="game-card game-view" id="real-fake-game" role="tabpanel" aria-label="Real, Fake, or Uncertain?" hidden>
+                <div class="game-card-heading"><h2>Real, Fake, or Uncertain?</h2></div>
+                <div class="game-content" data-content="real-fake"></div>
+              </section>
+              <section class="game-card game-view" id="ethical-game" role="tabpanel" aria-label="AI: Ethical or Not?" hidden>
+                <div class="game-card-heading"><h2>AI: Ethical or Not?</h2></div>
+                <div class="game-content" data-content="ethical"></div>
+              </section>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      const games = {
+        hiring: {
+          rounds: [
+            {
+              kicker: "Weekend shop helper",
+              title: "Meet Samir",
+              intro: "A bike shop needs help on Saturdays.",
+              visual: '<svg viewBox="0 0 400 170" role="presentation"><g transform="translate(-50 -21.25) scale(1.25)"><rect class="visual-paper" x="40" y="20" width="142" height="130" rx="15"/><circle class="visual-yellow" cx="82" cy="63" r="21"/><path class="visual-green" d="M51 128c3-26 14-39 31-39s28 13 31 39z"/><path d="M128 54h37m-37 17h27m-104 44h67" stroke="#dce6d8" stroke-width="8" stroke-linecap="round"/><path d="M198 85h34m-12-12 12 12-12 12" fill="none" stroke="#52705a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><rect class="visual-paper" x="249" y="28" width="111" height="114" rx="15"/><rect x="264" y="43" width="81" height="76" rx="10" fill="#eaf1e4"/><circle class="visual-yellow" cx="304" cy="68" r="13"/><path class="visual-green" d="M282 105c2-17 10-25 22-25s20 8 22 25z"/><path d="M282 128h45" stroke="#dce6d8" stroke-width="6" stroke-linecap="round"/></g></svg>',
+              evidence: ["Two summers repairing bikes at a community workshop.", "Available Saturdays; enjoys helping customers.", "28-minute bus ride to the shop."],
+              ai: "Low match: commute is longer than preferred.",
+              prompt: "What should the shop do?",
+              options: ["Trust the AI score", "Interview Samir", "Ask about the commute"],
+              answer: 1,
+            },
+            {
+              kicker: "Kitchen assistant",
+              title: "Meet Mia",
+              intro: "A community kitchen needs help preparing meals.",
+              visual: '<svg viewBox="0 0 400 170" role="presentation"><path d="M84 67h134l-12 57H96z" class="visual-paper"/><path d="M100 67c4-32 19-45 47-45s42 13 47 45" class="visual-yellow"/><path d="M105 82h91" stroke="#dce6d8" stroke-width="7" stroke-linecap="round"/><circle class="visual-green" cx="285" cy="79" r="40"/><path d="M260 79h50M285 54v50" stroke="#fffefa" stroke-width="7" stroke-linecap="round"/><path d="M240 129h90" stroke="#52705a" stroke-width="7" stroke-linecap="round"/></svg>',
+              evidence: ["Has a food-safety certificate.", "Volunteered at a school food pantry.", "Took time away from work to care for family."],
+              ai: "Lower score: gap in work history.",
+              prompt: "What should the kitchen do?",
+              options: ["Reject Mia", "Ask about her family", "Consider her skills"],
+              answer: 2,
+            },
+            {
+              kicker: "Event assistant",
+              title: "Meet Jordan",
+              intro: "A community center needs help with youth events.",
+              visual: '<svg viewBox="0 0 400 170" role="presentation"><rect class="visual-paper" x="63" y="38" width="126" height="101" rx="13"/><path d="M82 61h88m-88 18h76m-76 18h53" stroke="#dce6d8" stroke-width="8" stroke-linecap="round"/><rect class="visual-yellow" x="82" y="111" width="44" height="12" rx="6"/><path d="m236 119 35-82 40 82z" class="visual-green"/><circle class="visual-yellow" cx="291" cy="49" r="17"/><path d="M249 126h87" stroke="#52705a" stroke-width="7" stroke-linecap="round"/></svg>',
+              evidence: ["Organized a school fundraiser.", "Tracked supplies and made a volunteer schedule.", "Completed an event-planning course."],
+              ai: "Lower score: school not on the preferred list.",
+              prompt: "What should the center compare?",
+              options: ["School names", "Organizing skills", "AI predictions"],
+              answer: 1,
+            },
+            {
+              kicker: "Library assistant",
+              title: "Meet Alex",
+              intro: "A library needs after-school help with shelves and visitors.",
+              visual: '<svg viewBox="0 0 400 170" role="presentation"><rect class="visual-paper" x="68" y="30" width="125" height="112" rx="12"/><path d="M86 46h88v23H86zm0 32h88v23H86zm0 32h88v20H86z" class="visual-green"/><path d="M98 46v23m30-23v23m28-23v23m-44 9v23m32-23v23m-32 9v20" stroke="#fffefa" stroke-width="4"/><circle class="visual-yellow" cx="273" cy="68" r="23"/><path class="visual-green" d="M236 138c3-29 17-44 37-44s34 15 37 44z"/><path d="M306 58c23 4 32 19 29 38" fill="none" stroke="#52705a" stroke-width="5" stroke-linecap="round"/></svg>',
+              evidence: ["Organized books at a reading club.", "Available weekday afternoons.", "Saturday availability is not listed."],
+              ai: "Top score: application matched preferred keywords.",
+              prompt: "What should the library do?",
+              options: ["Hire Alex now", "Reject Alex", "Ask all candidates about Saturdays"],
+              answer: 2,
+            },
+            {
+              kicker: "Welcome desk assistant",
+              title: "Meet Casey",
+              intro: "A community center needs someone to greet visitors.",
+              visual: '<svg viewBox="0 0 400 170" role="presentation"><rect class="visual-paper" x="55" y="45" width="142" height="91" rx="13"/><path d="M76 69h100m-100 18h73" stroke="#dce6d8" stroke-width="8" stroke-linecap="round"/><circle class="visual-yellow" cx="257" cy="67" r="22"/><circle class="visual-green" cx="311" cy="81" r="18"/><path class="visual-green" d="M222 137c3-30 15-46 35-46s33 16 36 46zm67 0c2-25 10-39 22-39s21 14 23 39z"/><path d="m265 54 7 11 13 2-10 9 2 13-12-6-12 6 2-13-10-9 13-2z" fill="#fffefa"/></svg>',
+              evidence: ["Helped visitors at a welcome desk.", "Speaks two languages.", "AI could not understand Casey's practice clip."],
+              ai: "Low match: speech did not match the AI's usual pattern.",
+              prompt: "What should the center do?",
+              options: ["Reject Casey", "Check job skills fairly", "Judge speaking speed"],
+              answer: 1,
+            }
+          ],
+        },
+        "real-fake": {
+          rounds: [
+            {
+              kicker: "Text message",
+              title: "A surprise prize",
+              intro: "“You won $500. Claim it in 10 minutes!”",
+              visual: '<svg viewBox="0 0 400 170" role="presentation"><rect class="visual-paper" x="122" y="11" width="156" height="148" rx="20"/><rect class="visual-green" x="143" y="29" width="114" height="19" rx="9"/><path d="M148 68h102m-102 16h84" stroke="#dce6d8" stroke-width="8" stroke-linecap="round"/><circle class="visual-yellow" cx="240" cy="121" r="25"/><text x="240" y="131" text-anchor="middle" fill="#735c1f" font-size="29" font-family="sans-serif">$</text><path d="m101 54 8 15 16 3-12 11 3 16-15-8-14 8 3-16-12-11 16-3z" class="visual-yellow"/></svg>',
+              evidence: ["The link is not the shop's website.", "It asks for your password and a fee."],
+              prompt: "How would you label it?",
+              options: ["Real", "Fake", "Uncertain"],
+              answer: 1,
+            },
+            {
+              kicker: "Online reviews",
+              title: "Five stars, same words",
+              intro: "Several reviews appeared on the same day.",
+              visual: '<svg viewBox="0 0 400 170" role="presentation"><rect class="visual-paper" x="57" y="28" width="190" height="114" rx="15"/><path d="M78 53h64m-64 17h144m-144 16h129" stroke="#dce6d8" stroke-width="8" stroke-linecap="round"/><path d="m89 116 5 10 11 2-8 8 2 11-10-5-10 5 2-11-8-8 11-2z" transform="translate(0 -8)" class="visual-yellow"/><path d="m125 116 5 10 11 2-8 8 2 11-10-5-10 5 2-11-8-8 11-2z" transform="translate(0 -8)" class="visual-yellow"/><circle class="visual-green" cx="303" cy="83" r="36"/><path d="M286 83h34m-17-17v34" stroke="#fffefa" stroke-width="6" stroke-linecap="round"/></svg>',
+              evidence: ["Several repeat the phrase “best sip in the universe.”", "It is not clear if reviewers got free drinks."],
+              prompt: "How would you label them?",
+              options: ["Real", "Fake", "Uncertain"],
+              answer: 2,
+            },
+            {
+              kicker: "Online ad",
+              title: "A very cheap game console",
+              intro: "The seller says “today only” and “keep this deal secret.”",
+              visual: '<svg viewBox="0 0 400 170" role="presentation"><rect class="visual-paper" x="68" y="43" width="265" height="86" rx="18"/><rect class="visual-green" x="167" y="67" width="66" height="39" rx="12"/><path d="M183 86h20m-10-10v20" stroke="#fffefa" stroke-width="5" stroke-linecap="round"/><circle cx="221" cy="80" r="3" fill="#fffefa"/><circle cx="221" cy="94" r="3" fill="#fffefa"/><path d="m110 52 6 12 13 2-10 9 2 13-11-6-11 6 2-13-10-9 13-2z" class="visual-yellow"/><path d="m288 48 5 10 11 2-8 8 2 11-10-5-9 5 2-11-8-8 11-2z" class="visual-yellow"/></svg>',
+              evidence: ["No business address or return policy.", "Payment by gift card only."],
+              prompt: "How would you label it?",
+              options: ["Real", "Fake", "Uncertain"],
+              answer: 1,
+            },
+            {
+              kicker: "Delivery notice",
+              title: "Your parcel is waiting",
+              intro: "The message uses a familiar delivery company name.",
+              visual: '<svg viewBox="0 0 400 170" role="presentation"><path d="m114 59 86-42 86 42v72l-86 39-86-39z" class="visual-paper"/><path d="m114 59 86 45 86-45m-86 45v66" fill="none" stroke="#52705a" stroke-width="5" stroke-linejoin="round"/><path d="m162 39 85 44" fill="none" stroke="#f1cc59" stroke-width="12"/><circle class="visual-green" cx="297" cy="44" r="23"/><path d="M297 31v15l10 7" fill="none" stroke="#fffefa" stroke-width="5" stroke-linecap="round"/></svg>',
+              evidence: ["The tracking number looks too short.", "It asks you to follow a link."],
+              prompt: "How would you label it?",
+              options: ["Real", "Fake", "Uncertain"],
+              answer: 2,
+            },
+            {
+              kicker: "Study app ad",
+              title: "Perfect grades guaranteed",
+              intro: "The ad promises perfect grades for every student.",
+              visual: '<svg viewBox="0 0 400 170" role="presentation"><rect class="visual-paper" x="67" y="27" width="137" height="117" rx="14"/><rect class="visual-yellow" x="84" y="45" width="103" height="20" rx="10"/><path d="M87 84h96m-96 15h79" stroke="#dce6d8" stroke-width="8" stroke-linecap="round"/><circle class="visual-green" cx="280" cy="84" r="44"/><path d="m264 84 11 11 22-25" fill="none" stroke="#fffefa" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><path d="m279 20 6 12 13 2-10 9 2 13-11-6-11 6 2-13-10-9 13-2z" class="visual-yellow"/></svg>',
+              evidence: ["The ad gives no proof or explanation.", "The company is named; reviews are mixed."],
+              prompt: "How would you label it?",
+              options: ["Real", "Fake", "Uncertain"],
+              answer: 2,
+            },
+            {
+              kicker: "Marketplace listing",
+              title: "The rare sneakers",
+              intro: "A seller has one pair left at a very low price.",
+              visual: '<svg viewBox="0 0 400 170" role="presentation"><path d="M74 104c25-2 44-25 56-46 10 19 24 31 43 38l54 19c11 4 16 15 12 25H91c-16 0-25-16-17-36z" class="visual-paper"/><path d="M74 124h162c8 0 12 5 12 13H91c-12 0-19-6-17-13z" class="visual-green"/><path d="m119 91 30 18m-14-31 31 20m-17-32 29 18" fill="none" stroke="#f1cc59" stroke-width="6" stroke-linecap="round"/><circle class="visual-yellow" cx="297" cy="60" r="27"/><path d="M286 60h22m-11-11v22" stroke="#fffefa" stroke-width="5" stroke-linecap="round"/></svg>',
+              evidence: ["The photos appear on several sellers' pages.", "The seller asks you to pay outside the marketplace."],
+              prompt: "How would you label it?",
+              options: ["Real", "Fake", "Uncertain"],
+              answer: 2,
+            },
+            {
+              kicker: "Customer review",
+              title: "A glowing restaurant review",
+              intro: "A review says a new restaurant is wonderful.",
+              visual: '<svg viewBox="0 0 400 170" role="presentation"><rect class="visual-paper" x="60" y="33" width="188" height="106" rx="14"/><path d="m87 56 6 13 15 2-11 10 3 15-13-7-13 7 3-15-11-10 15-2z" class="visual-yellow"/><path d="m123 56 6 13 15 2-11 10 3 15-13-7-13 7 3-15-11-10 15-2z" class="visual-yellow"/><path d="m159 56 6 13 15 2-11 10 3 15-13-7-13 7 3-15-11-10 15-2z" class="visual-yellow"/><path d="M84 111h137" stroke="#dce6d8" stroke-width="8" stroke-linecap="round"/><path d="M294 46c24 0 40 18 40 40 0 31-40 61-40 61s-40-30-40-61c0-22 16-40 40-40" class="visual-green"/><circle class="visual-paper" cx="294" cy="84" r="13"/></svg>',
+              evidence: ["The review describes specific dishes and service.", "The reviewer has posted many different local reviews over two years."],
+              prompt: "How would you label it?",
+              options: ["Real", "Fake", "Uncertain"],
+              answer: 0,
+            },
+            {
+              kicker: "Bank alert",
+              title: "A suspicious charge",
+              intro: "A message says your card was charged and asks you to call a number.",
+              visual: '<svg viewBox="0 0 400 170" role="presentation"><rect class="visual-paper" x="65" y="34" width="126" height="100" rx="14"/><rect class="visual-green" x="81" y="50" width="94" height="20" rx="8"/><path d="M85 88h82m-82 15h57" stroke="#dce6d8" stroke-width="8" stroke-linecap="round"/><circle class="visual-yellow" cx="277" cy="82" r="43"/><path d="M277 55v31m0 16v2" stroke="#fffefa" stroke-width="8" stroke-linecap="round"/><path d="M277 30v-9m-45 61h-9m99 0h-9" stroke="#52705a" stroke-width="4" stroke-linecap="round"/></svg>',
+              evidence: ["You do not recognize the charge.", "The message number is different from the one on your bank card."],
+              prompt: "How would you label it?",
+              options: ["Real", "Fake", "Uncertain"],
+              answer: 2,
+            }
+          ]
+        },
+        ethical: {
+          rounds: [
+            {
+              kicker: "At the library",
+              title: "A book finder",
+              intro: "AI suggests books based on readers' interests.",
+              visual: '<svg viewBox="0 0 400 170" role="presentation"><path d="M75 48c38-10 77-4 125 15v81c-45-19-86-25-125-15zm250 0c-38-10-77-4-125 15v81c45-19 86-25 125-15z" class="visual-paper"/><path d="M200 63v81" stroke="#52705a" stroke-width="5"/><path d="M97 72c27-4 54 1 77 10m-77 9c27-4 54 1 77 10m52-19c23-9 50-14 77-10m-77 29c23-9 50-14 77-10" fill="none" stroke="#dce6d8" stroke-width="7" stroke-linecap="round"/><circle class="visual-yellow" cx="315" cy="38" r="13"/></svg>',
+              evidence: ["Readers choose whether to use it.", "It explains each suggestion.", "Readers can clear their preferences."],
+              prompt: "Ethical or unethical?",
+              options: ["Ethical", "Unethical"],
+              answer: 0,
+            },
+            {
+              kicker: "At school",
+              title: "A secret behavior score",
+              intro: "AI cameras score students without telling them.",
+              visual: '<svg viewBox="0 0 400 170" role="presentation"><rect class="visual-paper" x="81" y="23" width="238" height="123" rx="14"/><circle cx="200" cy="74" r="30" fill="#dfe9d6"/><circle class="visual-green" cx="200" cy="66" r="14"/><path class="visual-green" d="M174 103c2-20 11-29 26-29s24 9 26 29z"/><path d="M119 126h162" stroke="#dce6d8" stroke-width="8" stroke-linecap="round"/><path d="m278 30 25 25m0-25-25 25" stroke="#d37a53" stroke-width="6" stroke-linecap="round"/></svg>',
+              evidence: ["The score can affect how adults treat them.", "Students cannot see or challenge their score."],
+              prompt: "Ethical or unethical?",
+              options: ["Ethical", "Unethical"],
+              answer: 1,
+            },
+            {
+              kicker: "At a bakery",
+              title: "A flyer draft",
+              intro: "A bakery owner uses AI to draft a sale flyer.",
+              visual: '<svg viewBox="0 0 400 170" role="presentation"><rect class="visual-paper" x="78" y="23" width="131" height="124" rx="13"/><rect class="visual-yellow" x="94" y="39" width="98" height="32" rx="8"/><path d="M96 86h94m-94 15h83" stroke="#dce6d8" stroke-width="8" stroke-linecap="round"/><path d="M244 112c0-28 17-44 42-44s42 16 42 44" class="visual-green"/><path d="M240 114h92v22h-92z" fill="#f1cc59"/><path d="M268 62h37" stroke="#52705a" stroke-width="7" stroke-linecap="round"/></svg>',
+              evidence: ["The owner checks the facts and edits it.", "No customer details are shared."],
+              prompt: "Ethical or unethical?",
+              options: ["Ethical", "Unethical"],
+              answer: 0,
+            },
+            {
+              kicker: "At work",
+              title: "A hiring shortcut",
+              intro: "AI rejects applicants based on a short video.",
+              visual: '<svg viewBox="0 0 400 170" role="presentation"><rect class="visual-paper" x="61" y="23" width="148" height="124" rx="15"/><rect x="76" y="38" width="118" height="75" rx="9" fill="#eaf1e4"/><circle class="visual-yellow" cx="135" cy="67" r="17"/><path class="visual-green" d="M105 105c2-18 12-28 30-28s28 10 30 28z"/><path d="M103 128h63" stroke="#dce6d8" stroke-width="7" stroke-linecap="round"/><path d="M263 53h64m-64 20h49m-49 20h57" stroke="#dce6d8" stroke-width="8" stroke-linecap="round"/><circle cx="294" cy="123" r="18" fill="#f1cc59"/><path d="m285 123 7 7 13-15" fill="none" stroke="#fffefa" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+              evidence: ["The company has not checked for unfair results.", "Applicants cannot appeal or speak to a person."],
+              prompt: "Ethical or unethical?",
+              options: ["Ethical", "Unethical"],
+              answer: 1,
+            },
+            {
+              kicker: "In a money app",
+              title: "A savings tip",
+              intro: "AI suggests ways to save based on spending patterns.",
+              visual: '<svg viewBox="0 0 400 170" role="presentation"><rect class="visual-paper" x="132" y="14" width="136" height="142" rx="20"/><rect x="146" y="31" width="108" height="99" rx="11" fill="#eef5e9"/><path d="M164 109V93m24 16V77m24 32V59" stroke="#80ae78" stroke-width="12" stroke-linecap="round"/><path d="m161 73 24-15 24 6 22-24" fill="none" stroke="#52705a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle class="visual-yellow" cx="231" cy="40" r="9"/></svg>',
+              evidence: ["The app asks permission and explains what it uses.", "People can turn it off and delete their data."],
+              prompt: "Ethical or unethical?",
+              options: ["Ethical", "Unethical"],
+              answer: 0,
+            }
+          ]
+        },
+      };
+
+      const gameState = Object.fromEntries(Object.keys(games).map((id) => [id, { index: 0, score: 0, answered: false, complete: false, aiRevealed: false }]));
+      let activeGame = "hiring";
+      const navButtons = document.querySelectorAll(".nav-button");
+      const gameTabs = document.querySelectorAll(".game-tab");
+      const presentationToggle = document.querySelector(".presentation-toggle");
+      const simulationBrowser = document.querySelector(".simulation-browser");
+      const simulationCollection = document.querySelector(".simulation-collection");
+      const classFolder = document.querySelector(".class-folder");
+      const backToFolders = document.querySelector(".back-to-folders");
+      const classNavToggle = document.querySelector(".class-nav-toggle");
+      const classNavChildren = document.querySelector(".class-nav-children");
+      const classWeekLink = document.querySelector(".class-week-link");
+
+      presentationToggle.addEventListener("click", () => {
+        const enabled = document.body.classList.toggle("presentation-mode");
+        presentationToggle.setAttribute("aria-pressed", String(enabled));
+        presentationToggle.textContent = enabled ? "Exit presentation mode" : "Presentation mode";
+      });
+
+      function openWeekThreeClass() {
+        document.body.classList.remove("presentation-mode");
+        presentationToggle.setAttribute("aria-pressed", "false");
+        presentationToggle.textContent = "Presentation mode";
+        document.querySelectorAll(".view").forEach((view) => {
+          view.hidden = view.id !== "simulations-view";
+        });
+        navButtons.forEach((button) => {
+          if (button.dataset.view === "simulations") button.setAttribute("aria-current", "page");
+          else button.removeAttribute("aria-current");
+        });
+        simulationBrowser.hidden = true;
+        simulationCollection.hidden = false;
+        classFolder.setAttribute("aria-expanded", "true");
+        classNavToggle.setAttribute("aria-expanded", "true");
+        classNavChildren.hidden = false;
+        classWeekLink.setAttribute("aria-current", "page");
+        renderGame(activeGame);
+      }
+
+      classFolder.addEventListener("click", openWeekThreeClass);
+      classWeekLink.addEventListener("click", openWeekThreeClass);
+      classNavToggle.addEventListener("click", () => {
+        const expanded = classNavToggle.getAttribute("aria-expanded") !== "true";
+        classNavToggle.setAttribute("aria-expanded", String(expanded));
+        classNavChildren.hidden = !expanded;
+      });
+
+      backToFolders.addEventListener("click", () => {
+        document.body.classList.remove("presentation-mode");
+        presentationToggle.setAttribute("aria-pressed", "false");
+        presentationToggle.textContent = "Presentation mode";
+        simulationCollection.hidden = true;
+        simulationBrowser.hidden = false;
+        classFolder.setAttribute("aria-expanded", "false");
+        classWeekLink.removeAttribute("aria-current");
+        classFolder.focus();
+      });
+
+      function showView(viewName) {
+        document.body.classList.remove("presentation-mode");
+        presentationToggle.setAttribute("aria-pressed", "false");
+        presentationToggle.textContent = "Presentation mode";
+        document.querySelectorAll(".view").forEach((view) => {
+          view.hidden = view.id !== `${viewName}-view`;
+        });
+        if (viewName === "simulations") {
+          simulationCollection.hidden = true;
+          simulationBrowser.hidden = false;
+          classFolder.setAttribute("aria-expanded", "false");
+          classWeekLink.removeAttribute("aria-current");
+        }
+        navButtons.forEach((button) => {
+          if (button.dataset.view === viewName) button.setAttribute("aria-current", "page");
+          else button.removeAttribute("aria-current");
+        });
+        if (viewName === "simulations") renderGame(activeGame);
+      }
+
+      function createElement(tag, className, text) {
+        const element = document.createElement(tag);
+        if (className) element.className = className;
+        if (text !== undefined) element.textContent = text;
+        return element;
+      }
+
+      function showMoneyConfetti(sourceButton) {
+        const bounds = sourceButton.getBoundingClientRect();
+        const burst = createElement("div", "money-confetti");
+        burst.setAttribute("aria-hidden", "true");
+        burst.style.left = `${bounds.left + bounds.width / 2}px`;
+        burst.style.top = `${bounds.top + bounds.height / 2}px`;
+        const colors = ["#f04467", "#ff9f1c", "#ffd23f", "#37b878", "#24a8d8", "#8b5cf6", "#f15bb5"];
+        const pieces = [
+          [-155, -95, -35, "strip"], [-118, -158, 28, "square"], [-75, -112, -18, "strip"],
+          [-32, -185, 40, "dot"], [18, -132, -28, "square"], [67, -172, 32, "strip"],
+          [112, -112, -42, "square"], [158, -158, 18, "dot"], [-188, -28, 22, "strip"],
+          [186, -38, -42, "dot"], [-143, 42, 40, "square"], [-92, 102, -24, "strip"],
+          [-38, 74, 30, "square"], [24, 126, -36, "dot"], [82, 71, 28, "strip"],
+          [139, 34, -18, "square"], [-210, -138, -27, "dot"], [214, -132, 35, "strip"],
+          [-207, 114, 42, "square"], [202, 105, -32, "strip"],
+        ];
+        pieces.forEach(([x, y, rotation, shape], index) => {
+          const piece = createElement("span", `money-confetti-piece is-${shape}`);
+          piece.style.setProperty("--piece-color", colors[index % colors.length]);
+          piece.style.setProperty("--money-x", `${x}px`);
+          piece.style.setProperty("--money-y", `${y}px`);
+          piece.style.setProperty("--money-rotation", `${rotation}deg`);
+          piece.style.animationDelay = `${index % 4 * 35}ms`;
+          burst.append(piece);
+        });
+        document.body.append(burst);
+        window.setTimeout(() => burst.remove(), 1900);
+      }
+
+      function renderGame(gameId) {
+        const game = games[gameId];
+        const state = gameState[gameId];
+        const host = document.querySelector(`[data-content="${gameId}"]`);
+        host.replaceChildren();
+        const progressBlock = createElement("div", "progress-block");
+        const progressLabel = createElement("div", "progress-label");
+        const roundCount = state.complete ? game.rounds.length : state.index + 1;
+        progressLabel.append(
+          createElement("span", "", state.complete ? "Complete" : `Round ${roundCount} of ${game.rounds.length}`),
+          createElement("span", "", `${state.score} / ${game.rounds.length}`)
+        );
+        const progressTrack = createElement("div", "progress-track");
+        progressTrack.setAttribute("role", "progressbar");
+        progressTrack.setAttribute("aria-label", "Game progress");
+        progressTrack.setAttribute("aria-valuemin", "0");
+        progressTrack.setAttribute("aria-valuemax", String(game.rounds.length));
+        progressTrack.setAttribute("aria-valuenow", String(state.complete ? game.rounds.length : state.index));
+        const progressFill = createElement("div", "progress-fill");
+        progressFill.style.width = `${(state.complete ? game.rounds.length : state.index) / game.rounds.length * 100}%`;
+        progressTrack.append(progressFill);
+        progressBlock.append(progressLabel, progressTrack);
+        host.append(progressBlock);
+
+        if (state.complete) {
+          const completion = createElement("div", "completion");
+          const completionTitle = createElement("h3", "", "Finished");
+          completionTitle.tabIndex = -1;
+          completion.append(
+            completionTitle,
+            createElement("p", "", `Score: ${state.score} / ${game.rounds.length}`)
+          );
+          const replay = createElement("button", "primary-button", "Play again");
+          replay.type = "button";
+          replay.addEventListener("click", () => {
+            gameState[gameId] = { index: 0, score: 0, answered: false, complete: false, aiRevealed: false };
+            renderGame(gameId);
+            document.querySelector(`#${gameId}-game .scenario h3`).focus();
+          });
+          completion.append(replay);
+          host.append(completion);
+          return;
+        }
+
+        const round = game.rounds[state.index];
+        const scenario = createElement("article", "scenario");
+        if (round.visual) {
+          const visual = createElement("div", "scenario-visual");
+          visual.setAttribute("aria-hidden", "true");
+          visual.innerHTML = round.visual;
+          scenario.append(visual);
+        }
+        const scenarioTitle = createElement("h3", "", round.title);
+        scenarioTitle.tabIndex = -1;
+        scenario.append(
+          createElement("p", "scenario-kicker", round.kicker),
+          scenarioTitle,
+          createElement("p", "scenario-intro", round.intro)
+        );
+        const evidenceBox = createElement("div", "evidence-box");
+        const evidenceList = createElement("ul", "evidence-list");
+        round.evidence.forEach((item) => evidenceList.append(createElement("li", "", item)));
+        evidenceBox.append(evidenceList);
+        scenario.append(evidenceBox);
+
+        if (gameId === "hiring" && !state.aiRevealed) {
+          const revealActions = createElement("div", "game-actions");
+          const revealButton = createElement("button", "primary-button", "Reveal the AI score");
+          revealButton.type = "button";
+          revealButton.addEventListener("click", () => {
+            state.aiRevealed = true;
+            renderGame(gameId);
+            document.querySelector(`#${gameId}-game .decision-prompt`).focus();
+          });
+          revealActions.append(revealButton);
+          scenario.append(revealActions);
+          host.append(scenario);
+          return;
+        }
+
+        if (gameId === "hiring" && round.ai) {
+          const aiFlag = createElement("div", "ai-flag");
+          aiFlag.append(createElement("strong", "", "AI score"), createElement("p", "", round.ai));
+          scenario.append(aiFlag);
+        }
+        scenario.append(createElement("p", "decision-prompt", round.prompt));
+        scenario.querySelector(".decision-prompt").tabIndex = -1;
+        const options = createElement("div", "answer-options");
+        options.setAttribute("role", "group");
+        options.setAttribute("aria-label", "Choose your answer");
+        const feedback = createElement("div", "feedback");
+        feedback.hidden = true;
+        feedback.setAttribute("aria-live", "polite");
+        const optionButtons = [];
+        round.options.forEach((option, index) => {
+          const button = createElement("button", "answer-option");
+          button.type = "button";
+          button.textContent = option;
+          button.addEventListener("click", () => {
+            if (state.answered) return;
+            const correct = index === round.answer;
+            if (!correct && (round.options.length === 3 || gameId === "ethical")) {
+              button.disabled = true;
+              button.classList.add("is-incorrect");
+              feedback.hidden = false;
+              feedback.classList.add("incorrect");
+              feedback.replaceChildren(createElement("strong", "", "Try again"));
+              return;
+            }
+            state.answered = true;
+            if (correct) {
+              state.score += 1;
+              showMoneyConfetti(button);
+            }
+            optionButtons.forEach((choice, choiceIndex) => {
+              choice.disabled = true;
+              if (choiceIndex === round.answer) choice.classList.add("is-correct");
+              else if (choiceIndex === index) choice.classList.add("is-incorrect");
+            });
+            feedback.hidden = false;
+            feedback.classList.toggle("incorrect", !correct);
+            feedback.replaceChildren(createElement("strong", "", correct ? "Correct" : "Try again"));
+            const scoreText = progressLabel.lastElementChild;
+            scoreText.textContent = `${state.score} / ${game.rounds.length}`;
+            nextButton.textContent = state.index === game.rounds.length - 1 ? "Finish" : "Continue";
+            nextButton.disabled = false;
+          });
+          optionButtons.push(button);
+          options.append(button);
+        });
+        scenario.append(options, feedback);
+        const actions = createElement("div", "game-actions");
+        const nextButton = createElement("button", "primary-button", "Continue");
+        nextButton.type = "button";
+        nextButton.disabled = true;
+        nextButton.addEventListener("click", () => {
+          if (!state.answered) return;
+          state.index += 1;
+          state.answered = false;
+          state.aiRevealed = false;
+          if (state.index >= game.rounds.length) state.complete = true;
+          renderGame(gameId);
+          const focusTarget = document.querySelector(`#${gameId}-game .scenario h3, #${gameId}-game .completion h3`);
+          if (focusTarget) focusTarget.focus();
+        });
+        actions.append(nextButton);
+        host.append(scenario, actions);
+      }
+
+      function selectGame(gameId) {
+        activeGame = gameId;
+        gameTabs.forEach((tab) => {
+          const selected = tab.dataset.game === gameId;
+          tab.setAttribute("aria-selected", String(selected));
+          tab.tabIndex = selected ? 0 : -1;
+        });
+        document.querySelectorAll(".game-view").forEach((view) => {
+          view.hidden = view.id !== `${gameId}-game`;
+        });
+        renderGame(gameId);
+      }
+
+      navButtons.forEach((button) => button.addEventListener("click", () => showView(button.dataset.view)));
+      document.querySelectorAll("[data-open-simulations]").forEach((button) => button.addEventListener("click", () => showView("simulations")));
+      gameTabs.forEach((tab, index) => {
+        tab.addEventListener("click", () => selectGame(tab.dataset.game));
+        tab.addEventListener("keydown", (event) => {
+          let nextIndex = index;
+          if (event.key === "ArrowRight") nextIndex = (index + 1) % gameTabs.length;
+          else if (event.key === "ArrowLeft") nextIndex = (index - 1 + gameTabs.length) % gameTabs.length;
+          else if (event.key === "Home") nextIndex = 0;
+          else if (event.key === "End") nextIndex = gameTabs.length - 1;
+          else return;
+          event.preventDefault();
+          selectGame(gameTabs[nextIndex].dataset.game);
+          gameTabs[nextIndex].focus();
+        });
+      });
+      document.querySelector(".brand").addEventListener("click", (event) => {
+        event.preventDefault();
+        showView("welcome");
+      });
+
+      selectGame(activeGame);
+    </script>
+  </body>
+</html>
